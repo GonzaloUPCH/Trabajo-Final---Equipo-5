@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clínica - Sala de Espera</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/sala-espera.css">
+</head>
+<body>
+  <div class="container">
+    <header class="page-header">
+      <h1>Sala de Espera</h1>
+      <a href="../pages/dashboard.html" class="back-link">Volver al Dashboard</a>
+    </header>
+
+    <main class="page-main">
+      <div class="stats-bar">
+        <div class="stat-card">
+          <span class="stat-number" id="stat-esperando">0</span>
+          <span class="stat-label">Esperando</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" id="stat-atencion">0</span>
+          <span class="stat-label">En Atención</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" id="stat-atendido">0</span>
+          <span class="stat-label">Atendidos</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" id="stat-ausente">0</span>
+          <span class="stat-label">Ausentes</span>
+        </div>
+      </div>
+
+      <div id="error-msg" class="message error hidden"></div>
+
+      <table id="tabla-sala" class="data-table">
+        <thead>
+          <tr>
+            <th>Orden</th>
+            <th>Paciente</th>
+            <th>Médico</th>
+            <th>Especialidad</th>
+            <th>Hora Llegada</th>
+            <th>Prioridad</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-sala"></tbody>
+      </table>
+
+      <div id="empty-state" class="empty-state hidden">No hay pacientes en sala de espera.</div>
+    </main>
+  </div>
+
+  <script type="module">
+    import {
+      getSalaEspera,
+      updateEstadoSalaEspera,
+      removeFromSalaEspera,
+      getSalaEsperaStats
+    } from '../js/sala-espera.js'
+
+    const userRol = sessionStorage.getItem('user_rol')
+
+    if (!userRol) {
+      window.location.href = '../index.html'
+      throw new Error('No session')
+    }
+
+    const permisos = {
+      atencion: ['Administrador', 'Recepción', 'Médico'],
+      atendido: ['Administrador', 'Recepción', 'Médico'],
+      ausente: ['Administrador', 'Recepción', 'Enfermería'],
+      retirar: ['Administrador']
+    }
+
+    const tbody = document.getElementById('tbody-sala')
+    const emptyState = document.getElementById('empty-state')
+    const errorMsg = document.getElementById('error-msg')
+
+    const statEsperando = document.getElementById('stat-esperando')
+    const statAtencion = document.getElementById('stat-atencion')
+    const statAtendido = document.getElementById('stat-atendido')
+    const statAusente = document.getElementById('stat-ausente')
+
+    function showError(text) {
+      errorMsg.textContent = text
+      errorMsg.classList.remove('hidden')
+    }
+
+    function hideError() {
+      errorMsg.textContent = ''
+      errorMsg.classList.add('hidden')
+    }
+
+    function escapeHtml(value) {
+      if (value === null || value === undefined) return ''
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+    }
+
+    function estadoBadge(estado) {
+      const map = {
+        'Esperando': 'badge-esperando',
+        'En atención': 'badge-atencion',
+        'Atendido': 'badge-atendido',
+        'Ausente': 'badge-ausente'
+      }
+      const cls = map[estado] || ''
+      return `<span class="badge ${cls}">${escapeHtml(estado)}</span>`
+    }
+
+    function formatHora(timestamp) {
+      if (!timestamp) return ''
+      const d = new Date(timestamp)
+      const hh = String(d.getHours()).padStart(2, '0')
+      const mm = String(d.getMinutes()).padStart(2, '0')
+      return `${hh}:${mm}`
+    }
+
+    function ordenIndicator(orden) {
+      const cls = orden === 1 ? 'orden-1' : orden === 2 ? 'orden-2' : 'orden-3'
+      return `<span class="orden-indicator ${cls}">${escapeHtml(orden)}</span>`
+    }
+
+    function buildAcciones(id) {
+      let html = ''
+      if (permisos.atencion.includes(userRol)) {
+        html += `<button type="button" class="btn-atencion" data-id="${escapeHtml(id)}">En Atención</button>`
+      }
+      if (permisos.atendido.includes(userRol)) {
+        html += `<button type="button" class="btn-atendido" data-id="${escapeHtml(id)}">Atendido</button>`
+      }
+      if (permisos.ausente.includes(userRol)) {
+        html += `<button type="button" class="btn-ausente" data-id="${escapeHtml(id)}">Ausente</button>`
+      }
+      if (permisos.retirar.includes(userRol)) {
+        html += `<button type="button" class="btn-retirar" data-id="${escapeHtml(id)}">Retirar</button>`
+      }
+      return html
+    }
+
+    function renderTable(registros) {
+      tbody.innerHTML = ''
+
+      if (!registros || registros.length === 0) {
+        emptyState.classList.remove('hidden')
+        return
+      }
+
+      emptyState.classList.add('hidden')
+
+      registros.forEach((r) => {
+        const cita = r.citas || {}
+        const paciente = cita.pacientes
+          ? `${escapeHtml(cita.pacientes.nombres)} ${escapeHtml(cita.pacientes.apellidos)}`
+          : ''
+        const tr = document.createElement('tr')
+        tr.innerHTML = `
+          <td>${ordenIndicator(r.orden_prioridad)}</td>
+          <td>${paciente}</td>
+          <td>${escapeHtml(cita.medico)}</td>
+          <td>${escapeHtml(cita.especialidad)}</td>
+          <td>${formatHora(r.hora_llegada)}</td>
+          <td>${escapeHtml(cita.prioridad)}</td>
+          <td>${estadoBadge(r.estado)}</td>
+          <td>${buildAcciones(r.id)}</td>
+        `
+        tbody.appendChild(tr)
+      })
+    }
+
+    async function loadSala() {
+      hideError()
+      const { data, error } = await getSalaEspera()
+      if (error) {
+        showError('Error al cargar la sala de espera.')
+        renderTable([])
+      } else {
+        renderTable(data)
+      }
+
+      const stats = await getSalaEsperaStats()
+      statEsperando.textContent = stats.esperando
+      statAtencion.textContent = stats.enAtencion
+      statAtendido.textContent = stats.atendido
+      statAusente.textContent = stats.ausente
+    }
+
+    async function handleEstado(id, estado) {
+      if (estado === 'Atendido' && !confirm('¿Marcar como atendido?')) return
+      if (estado === 'Ausente' && !confirm('¿Marcar como ausente?')) return
+      hideError()
+      const { error } = await updateEstadoSalaEspera(id, estado)
+      if (error) {
+        showError(error.message)
+        return
+      }
+      loadSala()
+    }
+
+    async function handleRetirar(id) {
+      if (!confirm('¿Retirar este registro de sala de espera?')) return
+      hideError()
+      const { error } = await removeFromSalaEspera(id)
+      if (error) {
+        showError(error.message)
+        return
+      }
+      loadSala()
+    }
+
+    tbody.addEventListener('click', (e) => {
+      const atencionBtn = e.target.closest('.btn-atencion')
+      const atendidoBtn = e.target.closest('.btn-atendido')
+      const ausenteBtn = e.target.closest('.btn-ausente')
+      const retirarBtn = e.target.closest('.btn-retirar')
+      if (atencionBtn) handleEstado(atencionBtn.dataset.id, 'En atención')
+      if (atendidoBtn) handleEstado(atendidoBtn.dataset.id, 'Atendido')
+      if (ausenteBtn) handleEstado(ausenteBtn.dataset.id, 'Ausente')
+      if (retirarBtn) handleRetirar(retirarBtn.dataset.id)
+    })
+
+    setInterval(loadSala, 30000)
+
+    loadSala()
+  </script>
+</body>
+</html>

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clínica - Historial</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/historial.css">
+</head>
+<body>
+  <div class="container">
+    <header class="page-header">
+      <h1>Historial de Consultas</h1>
+      <a href="../pages/dashboard.html" class="back-link">Volver al Dashboard</a>
+    </header>
+
+    <main class="page-main">
+      <div class="toolbar">
+        <input type="text" id="search-input" placeholder="Buscar por nombre, apellido o documento...">
+        <button type="button" id="btn-search">Buscar</button>
+        <button type="button" id="btn-reset">Ver todos</button>
+      </div>
+
+      <div id="error-msg" class="message error hidden"></div>
+
+      <table id="tabla-historial" class="data-table">
+        <thead>
+          <tr>
+            <th>Paciente</th>
+            <th>Médico</th>
+            <th>Especialidad</th>
+            <th>Fecha Atención</th>
+            <th>Diagnóstico</th>
+            <th>Próxima Cita</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-historial"></tbody>
+      </table>
+
+      <div id="empty-state" class="empty-state hidden">No hay registros en el historial.</div>
+    </main>
+  </div>
+
+  <div id="modal-historial" class="modal hidden">
+    <div class="modal-content">
+      <h2>Completar / Editar Consulta</h2>
+      <form id="form-historial" class="form-grid">
+        <div class="form-group">
+          <label for="h-paciente">Paciente</label>
+          <input type="text" id="h-paciente" readonly>
+        </div>
+        <div class="form-group">
+          <label for="h-medico">Médico</label>
+          <input type="text" id="h-medico" readonly>
+        </div>
+        <div class="form-group">
+          <label for="h-especialidad">Especialidad</label>
+          <input type="text" id="h-especialidad" readonly>
+        </div>
+        <div class="form-group">
+          <label for="h-fecha">Fecha de Atención</label>
+          <input type="text" id="h-fecha" readonly>
+        </div>
+        <div class="form-group full-width">
+          <label for="h-sintomas">Síntomas</label>
+          <textarea id="h-sintomas"></textarea>
+        </div>
+        <div class="form-group full-width">
+          <label for="h-diagnostico">Diagnóstico</label>
+          <textarea id="h-diagnostico" required></textarea>
+        </div>
+        <div class="form-group full-width">
+          <label for="h-tratamiento">Tratamiento</label>
+          <textarea id="h-tratamiento"></textarea>
+        </div>
+        <div class="form-group full-width">
+          <label for="h-medicamentos">Medicamentos</label>
+          <textarea id="h-medicamentos"></textarea>
+        </div>
+        <div class="form-group full-width">
+          <label for="h-observaciones">Observaciones</label>
+          <textarea id="h-observaciones"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="h-proxima-cita">Próxima Cita</label>
+          <input type="date" id="h-proxima-cita">
+        </div>
+
+        <div id="form-error" class="message error hidden full-width"></div>
+
+        <div class="form-actions">
+          <button type="submit" id="btn-guardar">Guardar</button>
+          <button type="button" id="btn-cancelar">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import {
+      getHistorial,
+      getHistorialById,
+      updateHistorial,
+      searchHistorial
+    } from '../js/historial.js'
+
+    const userRol = sessionStorage.getItem('user_rol')
+
+    if (!userRol) {
+      window.location.href = '../index.html'
+      throw new Error('No session')
+    }
+
+    if (userRol !== 'Administrador' && userRol !== 'Médico') {
+      window.location.href = '../pages/dashboard.html'
+      throw new Error('No permission')
+    }
+
+    const tbody = document.getElementById('tbody-historial')
+    const emptyState = document.getElementById('empty-state')
+    const errorMsg = document.getElementById('error-msg')
+    const searchInput = document.getElementById('search-input')
+
+    const modal = document.getElementById('modal-historial')
+    const form = document.getElementById('form-historial')
+    const formError = document.getElementById('form-error')
+
+    const fPaciente = document.getElementById('h-paciente')
+    const fMedico = document.getElementById('h-medico')
+    const fEspecialidad = document.getElementById('h-especialidad')
+    const fFecha = document.getElementById('h-fecha')
+    const fSintomas = document.getElementById('h-sintomas')
+    const fDiagnostico = document.getElementById('h-diagnostico')
+    const fTratamiento = document.getElementById('h-tratamiento')
+    const fMedicamentos = document.getElementById('h-medicamentos')
+    const fObservaciones = document.getElementById('h-observaciones')
+    const fProximaCita = document.getElementById('h-proxima-cita')
+
+    let editId = null
+
+    function showError(el, text) {
+      el.textContent = text
+      el.classList.remove('hidden')
+    }
+
+    function hideError(el) {
+      el.textContent = ''
+      el.classList.add('hidden')
+    }
+
+    function showModal() {
+      modal.classList.remove('hidden')
+    }
+
+    function hideModal() {
+      modal.classList.add('hidden')
+    }
+
+    function escapeHtml(value) {
+      if (value === null || value === undefined) return ''
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '—'
+      const parts = String(dateStr).slice(0, 10).split('-')
+      if (parts.length !== 3) return '—'
+      return `${parts[2]}/${parts[1]}/${parts[0]}`
+    }
+
+    function truncate(text, max) {
+      if (!text) return ''
+      return text.length > max ? text.slice(0, max) + '...' : text
+    }
+
+    function renderTable(registros) {
+      tbody.innerHTML = ''
+
+      if (!registros || registros.length === 0) {
+        emptyState.classList.remove('hidden')
+        return
+      }
+
+      emptyState.classList.add('hidden')
+
+      registros.forEach((r) => {
+        const paciente = r.pacientes
+          ? `${escapeHtml(r.pacientes.nombres)} ${escapeHtml(r.pacientes.apellidos)}`
+          : ''
+        const tr = document.createElement('tr')
+        tr.innerHTML = `
+          <td>${paciente}</td>
+          <td>${escapeHtml(r.medico)}</td>
+          <td>${escapeHtml(r.especialidad)}</td>
+          <td>${formatDate(r.fecha_atencion)}</td>
+          <td>${escapeHtml(truncate(r.diagnostico, 50))}</td>
+          <td>${formatDate(r.proxima_cita)}</td>
+          <td>
+            <button type="button" class="btn-ver-editar" data-id="${escapeHtml(r.id)}">Ver / Editar</button>
+          </td>
+        `
+        tbody.appendChild(tr)
+      })
+    }
+
+    async function loadHistorial() {
+      hideError(errorMsg)
+      const { data, error } = await getHistorial()
+      if (error) {
+        showError(errorMsg, 'Error al cargar el historial.')
+        renderTable([])
+        return
+      }
+      renderTable(data)
+    }
+
+    async function openEditModal(id) {
+      hideError(formError)
+      const { data, error } = await getHistorialById(id)
+      if (error || !data) {
+        showError(errorMsg, 'No se pudo cargar el registro.')
+        return
+      }
+      editId = id
+
+      document.getElementById('h-paciente').value = data.pacientes.nombres + ' ' + data.pacientes.apellidos
+      fMedico.value = data.medico || ''
+      fEspecialidad.value = data.especialidad || ''
+      fFecha.value = formatDate(data.fecha_atencion)
+      fSintomas.value = data.sintomas || ''
+      fDiagnostico.value = data.diagnostico || ''
+      fTratamiento.value = data.tratamiento || ''
+      fMedicamentos.value = data.medicamentos || ''
+      fObservaciones.value = data.observaciones || ''
+      fProximaCita.value = data.proxima_cita || ''
+      showModal()
+    }
+
+    tbody.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-ver-editar')
+      if (btn) openEditModal(btn.dataset.id)
+    })
+
+    document.getElementById('btn-cancelar').addEventListener('click', hideModal)
+
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      searchInput.value = ''
+      loadHistorial()
+    })
+
+    async function doSearch() {
+      hideError(errorMsg)
+      const query = searchInput.value.trim()
+      if (!query) {
+        loadHistorial()
+        return
+      }
+      const { data, error } = await searchHistorial(query)
+      if (error) {
+        showError(errorMsg, 'Error al buscar en el historial.')
+        renderTable([])
+        return
+      }
+      renderTable(data)
+    }
+
+    document.getElementById('btn-search').addEventListener('click', doSearch)
+
+    searchInput.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') doSearch()
+    })
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      hideError(formError)
+
+      const diagnostico = fDiagnostico.value.trim()
+      if (!diagnostico) {
+        showError(formError, 'El diagnóstico es obligatorio.')
+        return
+      }
+
+      const historialData = {
+        sintomas: fSintomas.value.trim() || null,
+        diagnostico: diagnostico,
+        tratamiento: fTratamiento.value.trim() || null,
+        medicamentos: fMedicamentos.value.trim() || null,
+        observaciones: fObservaciones.value.trim() || null,
+        proxima_cita: fProximaCita.value || null
+      }
+
+      const { error } = await updateHistorial(editId, historialData)
+      if (error) {
+        showError(formError, error.message)
+        return
+      }
+
+      hideModal()
+      loadHistorial()
+    })
+
+    loadHistorial()
+  </script>
+</body>
+</html>

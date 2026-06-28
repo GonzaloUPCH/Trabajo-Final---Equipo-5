@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clínica - Inicio de Sesión</title>
+  <link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+  <main class="auth-container">
+    <section id="login-view" class="auth-view">
+      <h1>Iniciar Sesión</h1>
+      <form id="login-form" class="auth-form">
+        <div class="form-group">
+          <label for="login-correo">Correo electrónico</label>
+          <input type="email" id="login-correo" name="login-correo" placeholder="correo@ejemplo.com" required>
+        </div>
+        <div class="form-group">
+          <label for="login-password">Contraseña</label>
+          <input type="password" id="login-password" name="login-password" placeholder="Contraseña" required>
+        </div>
+        <div id="login-error" class="message error hidden"></div>
+        <button type="submit" id="btn-login" class="btn-primary">Ingresar</button>
+      </form>
+      <p class="auth-switch">¿No tienes una cuenta? <button type="button" id="ir-registro" class="link-button">Regístrate</button></p>
+    </section>
+
+    <section id="register-view" class="auth-view hidden">
+      <h1>Crear Cuenta</h1>
+      <form id="register-form" class="auth-form">
+        <div class="form-group">
+          <label for="reg-nombre">Nombre completo</label>
+          <input type="text" id="reg-nombre" name="reg-nombre" placeholder="Nombre completo" required>
+        </div>
+        <div class="form-group">
+          <label for="reg-correo">Correo electrónico</label>
+          <input type="email" id="reg-correo" name="reg-correo" placeholder="correo@ejemplo.com" required>
+        </div>
+        <div class="form-group">
+          <label for="reg-password">Contraseña</label>
+          <input type="password" id="reg-password" name="reg-password" placeholder="Mínimo 6 caracteres" required>
+        </div>
+        <div class="form-group">
+          <label for="reg-confirmar">Confirmar contraseña</label>
+          <input type="password" id="reg-confirmar" name="reg-confirmar" placeholder="Repite la contraseña" required>
+        </div>
+        <div class="form-group">
+          <label for="reg-rol">Rol</label>
+          <select id="reg-rol" name="reg-rol" required>
+            <option value="">Seleccionar rol</option>
+            <option value="Administrador">Administrador</option>
+            <option value="Recepción">Recepción</option>
+            <option value="Médico">Médico</option>
+            <option value="Enfermería">Enfermería</option>
+          </select>
+        </div>
+        <div id="reg-error" class="message error hidden"></div>
+        <div id="reg-success" class="message success hidden"></div>
+        <button type="submit" id="btn-registro" class="btn-primary">Registrarse</button>
+      </form>
+      <p class="auth-switch">¿Ya tienes una cuenta? <button type="button" id="ir-login" class="link-button">Inicia sesión</button></p>
+    </section>
+  </main>
+
+  <script type="module">
+    import { registerUser, loginUser, getUserProfile, getCurrentUser } from './js/auth.js'
+
+    const loginView = document.getElementById('login-view')
+    const registerView = document.getElementById('register-view')
+
+    const irRegistro = document.getElementById('ir-registro')
+    const irLogin = document.getElementById('ir-login')
+
+    const loginForm = document.getElementById('login-form')
+    const loginCorreo = document.getElementById('login-correo')
+    const loginPassword = document.getElementById('login-password')
+    const loginError = document.getElementById('login-error')
+
+    const registerForm = document.getElementById('register-form')
+    const regNombre = document.getElementById('reg-nombre')
+    const regCorreo = document.getElementById('reg-correo')
+    const regPassword = document.getElementById('reg-password')
+    const regConfirmar = document.getElementById('reg-confirmar')
+    const regRol = document.getElementById('reg-rol')
+    const regError = document.getElementById('reg-error')
+    const regSuccess = document.getElementById('reg-success')
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+    function showMessage(el, text) {
+      el.textContent = text
+      el.classList.remove('hidden')
+    }
+
+    function hideMessage(el) {
+      el.textContent = ''
+      el.classList.add('hidden')
+    }
+
+    irRegistro.addEventListener('click', () => {
+      loginView.classList.add('hidden')
+      registerView.classList.remove('hidden')
+      hideMessage(loginError)
+    })
+
+    irLogin.addEventListener('click', () => {
+      registerView.classList.add('hidden')
+      loginView.classList.remove('hidden')
+      hideMessage(regError)
+      hideMessage(regSuccess)
+    })
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      hideMessage(loginError)
+
+      const correo = loginCorreo.value.trim()
+      const password = loginPassword.value
+
+      if (!emailRegex.test(correo)) {
+        showMessage(loginError, 'Ingresa un correo electrónico válido.')
+        return
+      }
+
+      if (!password) {
+        showMessage(loginError, 'La contraseña es obligatoria.')
+        return
+      }
+
+      const { error } = await loginUser(correo, password)
+
+      if (error) {
+        showMessage(loginError, 'Correo o contraseña incorrectos.')
+        return
+      }
+
+      const user = await getCurrentUser()
+      if (!user) {
+        showMessage(loginError, 'No se pudo obtener la sesión. Intenta de nuevo.')
+        return
+      }
+
+      const profile = await getUserProfile(user.id)
+      if (!profile) {
+        showMessage(loginError, 'No se encontró el perfil del usuario.')
+        return
+      }
+
+      sessionStorage.setItem('user_rol', profile.rol)
+      sessionStorage.setItem('user_nombre', profile.nombre)
+      window.location.href = 'pages/dashboard.html'
+    })
+
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      hideMessage(regError)
+      hideMessage(regSuccess)
+
+      const nombre = regNombre.value.trim()
+      const correo = regCorreo.value.trim()
+      const password = regPassword.value
+      const confirmar = regConfirmar.value
+      const rol = regRol.value
+
+      if (!nombre || !correo || !password || !confirmar || !rol) {
+        showMessage(regError, 'Todos los campos son obligatorios.')
+        return
+      }
+
+      if (!emailRegex.test(correo)) {
+        showMessage(regError, 'Ingresa un correo electrónico válido.')
+        return
+      }
+
+      if (password.length < 6) {
+        showMessage(regError, 'La contraseña debe tener al menos 6 caracteres.')
+        return
+      }
+
+      if (password !== confirmar) {
+        showMessage(regError, 'Las contraseñas no coinciden.')
+        return
+      }
+
+      const { error } = await registerUser(nombre, correo, password, rol)
+
+      if (error) {
+        showMessage(regError, error.message)
+        return
+      }
+
+      showMessage(regSuccess, 'Cuenta creada correctamente. Redirigiendo al inicio de sesión...')
+      registerForm.reset()
+
+      setTimeout(() => {
+        registerView.classList.add('hidden')
+        loginView.classList.remove('hidden')
+        hideMessage(regSuccess)
+      }, 2000)
+    })
+  </script>
+</body>
+</html>

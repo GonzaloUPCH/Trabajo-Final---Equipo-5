@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clínica - Citas</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/citas.css">
+</head>
+<body>
+  <div class="container">
+    <header class="page-header">
+      <h1>Programación de Citas</h1>
+      <a href="../pages/dashboard.html" class="back-link">Volver al Dashboard</a>
+    </header>
+
+    <main class="page-main">
+      <div class="toolbar">
+        <select id="filtro-estado">
+          <option value="">Todos los estados</option>
+          <option value="Programada">Programada</option>
+          <option value="Confirmada">Confirmada</option>
+          <option value="En espera">En espera</option>
+          <option value="En atención">En atención</option>
+          <option value="Atendida">Atendida</option>
+          <option value="Cancelada">Cancelada</option>
+        </select>
+        <button type="button" id="btn-nueva-cita">Nueva Cita</button>
+      </div>
+
+      <div id="error-msg" class="message error hidden"></div>
+
+      <table id="tabla-citas" class="data-table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Paciente</th>
+            <th>Especialidad</th>
+            <th>Médico</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Prioridad</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-citas"></tbody>
+      </table>
+
+      <div id="empty-state" class="empty-state hidden">No hay citas registradas.</div>
+    </main>
+  </div>
+
+  <div id="modal-cita" class="modal hidden">
+    <div class="modal-content">
+      <h2 id="modal-titulo">Nueva Cita</h2>
+      <form id="form-cita" class="form-grid">
+        <div class="form-group">
+          <label for="c-codigo">Código</label>
+          <input type="text" id="c-codigo" readonly>
+        </div>
+        <div class="form-group full-width">
+          <label for="c-paciente">Paciente</label>
+          <select id="c-paciente" required>
+            <option value="">Seleccionar paciente</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="c-especialidad">Especialidad</label>
+          <input type="text" id="c-especialidad" required>
+        </div>
+        <div class="form-group">
+          <label for="c-medico">Médico</label>
+          <input type="text" id="c-medico" required>
+        </div>
+        <div class="form-group">
+          <label for="c-fecha">Fecha</label>
+          <input type="date" id="c-fecha" required>
+        </div>
+        <div class="form-group">
+          <label for="c-hora">Hora</label>
+          <input type="time" id="c-hora" required>
+        </div>
+        <div class="form-group">
+          <label for="c-prioridad">Prioridad</label>
+          <select id="c-prioridad" required>
+            <option value="Normal">Normal</option>
+            <option value="Urgente">Urgente</option>
+            <option value="Emergencia">Emergencia</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="c-estado">Estado</label>
+          <select id="c-estado" required>
+            <option value="Programada">Programada</option>
+            <option value="Confirmada">Confirmada</option>
+            <option value="En espera">En espera</option>
+            <option value="En atención">En atención</option>
+            <option value="Atendida">Atendida</option>
+            <option value="Cancelada">Cancelada</option>
+          </select>
+        </div>
+        <div class="form-group full-width">
+          <label for="c-motivo">Motivo</label>
+          <textarea id="c-motivo"></textarea>
+        </div>
+        <div class="form-group full-width">
+          <label for="c-justificacion">Justificación de prioridad</label>
+          <textarea id="c-justificacion"></textarea>
+        </div>
+
+        <div id="form-error" class="message error hidden full-width"></div>
+
+        <div class="form-actions">
+          <button type="submit" id="btn-guardar">Guardar</button>
+          <button type="button" id="btn-cancelar">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import {
+      getCitas,
+      getCitaById,
+      createCita,
+      updateCita,
+      deleteCita,
+      generateCodigoCita,
+      getPacientesForSelect,
+      confirmarCita
+    } from '../js/citas.js'
+
+    const userRol = sessionStorage.getItem('user_rol')
+
+    if (!userRol) {
+      window.location.href = '../index.html'
+      throw new Error('No session')
+    }
+
+    if (userRol !== 'Administrador' && userRol !== 'Recepción') {
+      window.location.href = '../pages/dashboard.html'
+      throw new Error('No permission')
+    }
+
+    const tbody = document.getElementById('tbody-citas')
+    const emptyState = document.getElementById('empty-state')
+    const errorMsg = document.getElementById('error-msg')
+    const filtroEstado = document.getElementById('filtro-estado')
+
+    const modal = document.getElementById('modal-cita')
+    const modalTitulo = document.getElementById('modal-titulo')
+    const form = document.getElementById('form-cita')
+    const formError = document.getElementById('form-error')
+
+    const fCodigo = document.getElementById('c-codigo')
+    const fPaciente = document.getElementById('c-paciente')
+    const fEspecialidad = document.getElementById('c-especialidad')
+    const fMedico = document.getElementById('c-medico')
+    const fFecha = document.getElementById('c-fecha')
+    const fHora = document.getElementById('c-hora')
+    const fMotivo = document.getElementById('c-motivo')
+    const fPrioridad = document.getElementById('c-prioridad')
+    const fJustificacion = document.getElementById('c-justificacion')
+    const fEstado = document.getElementById('c-estado')
+
+    let editId = null
+
+    function showError(el, text) {
+      el.textContent = text
+      el.classList.remove('hidden')
+    }
+
+    function hideError(el) {
+      el.textContent = ''
+      el.classList.add('hidden')
+    }
+
+    function showModal() {
+      modal.classList.remove('hidden')
+    }
+
+    function hideModal() {
+      modal.classList.add('hidden')
+    }
+
+    function todayStr() {
+      const now = new Date()
+      const yyyy = now.getFullYear()
+      const mm = String(now.getMonth() + 1).padStart(2, '0')
+      const dd = String(now.getDate()).padStart(2, '0')
+      return `${yyyy}-${mm}-${dd}`
+    }
+
+    function escapeHtml(value) {
+      if (value === null || value === undefined) return ''
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+    }
+
+    function estadoBadge(estado) {
+      const map = {
+        'Programada': 'badge-programada',
+        'Confirmada': 'badge-confirmada',
+        'En espera': 'badge-espera',
+        'En atención': 'badge-atencion',
+        'Atendida': 'badge-atendida',
+        'Cancelada': 'badge-cancelada'
+      }
+      const cls = map[estado] || ''
+      return `<span class="badge ${cls}">${escapeHtml(estado)}</span>`
+    }
+
+    function renderTable(citas) {
+      tbody.innerHTML = ''
+
+      if (!citas || citas.length === 0) {
+        emptyState.classList.remove('hidden')
+        return
+      }
+
+      emptyState.classList.add('hidden')
+
+      citas.forEach((c) => {
+        const paciente = c.pacientes
+          ? `${escapeHtml(c.pacientes.nombres)} ${escapeHtml(c.pacientes.apellidos)}`
+          : ''
+        const confirmarBtn = c.estado === 'Programada'
+          ? `<button type="button" class="btn-confirmar" data-id="${escapeHtml(c.id)}">Confirmar</button>`
+          : ''
+        const tr = document.createElement('tr')
+        tr.innerHTML = `
+          <td>${escapeHtml(c.codigo)}</td>
+          <td>${paciente}</td>
+          <td>${escapeHtml(c.especialidad)}</td>
+          <td>${escapeHtml(c.medico)}</td>
+          <td>${escapeHtml(c.fecha)}</td>
+          <td>${escapeHtml(c.hora)}</td>
+          <td>${escapeHtml(c.prioridad)}</td>
+          <td>${estadoBadge(c.estado)}</td>
+          <td>
+            <button type="button" class="btn-editar" data-id="${escapeHtml(c.id)}">Editar</button>
+            <button type="button" class="btn-eliminar" data-id="${escapeHtml(c.id)}">Eliminar</button>
+            ${confirmarBtn}
+          </td>
+        `
+        tbody.appendChild(tr)
+      })
+    }
+
+    async function loadCitas() {
+      hideError(errorMsg)
+      const { data, error } = await getCitas()
+      if (error) {
+        showError(errorMsg, 'Error al cargar las citas.')
+        renderTable([])
+        return
+      }
+      const filtro = filtroEstado.value
+      const citas = filtro ? data.filter((c) => c.estado === filtro) : data
+      renderTable(citas)
+    }
+
+    async function populatePacientesSelect() {
+      const { data, error } = await getPacientesForSelect()
+      fPaciente.innerHTML = '<option value="">Seleccionar paciente</option>'
+      if (error || !data) return
+      data.forEach((p) => {
+        const option = document.createElement('option')
+        option.value = p.id
+        option.textContent = `${p.codigo} - ${p.apellidos}, ${p.nombres}`
+        fPaciente.appendChild(option)
+      })
+    }
+
+    async function openCreateModal() {
+      editId = null
+      form.reset()
+      hideError(formError)
+      modalTitulo.textContent = 'Nueva Cita'
+      await populatePacientesSelect()
+      fCodigo.value = await generateCodigoCita()
+      fEstado.value = 'Programada'
+      fPrioridad.value = 'Normal'
+      fFecha.min = todayStr()
+      showModal()
+    }
+
+    async function openEditModal(id) {
+      hideError(formError)
+      const { data, error } = await getCitaById(id)
+      if (error || !data) {
+        showError(errorMsg, 'No se pudo cargar la cita.')
+        return
+      }
+      editId = id
+      modalTitulo.textContent = 'Editar Cita'
+      await populatePacientesSelect()
+      fCodigo.value = data.codigo || ''
+      fPaciente.value = data.paciente_id || ''
+      fEspecialidad.value = data.especialidad || ''
+      fMedico.value = data.medico || ''
+      fFecha.value = data.fecha || ''
+      fFecha.min = todayStr()
+      fHora.value = data.hora || ''
+      fMotivo.value = data.motivo || ''
+      fPrioridad.value = data.prioridad || 'Normal'
+      fJustificacion.value = data.justificacion_prioridad || ''
+      fEstado.value = data.estado || 'Programada'
+      showModal()
+    }
+
+    async function handleDelete(id) {
+      if (!confirm('¿Eliminar esta cita?')) return
+      hideError(errorMsg)
+      const { error } = await deleteCita(id)
+      if (error) {
+        showError(errorMsg, error.message)
+        return
+      }
+      loadCitas()
+    }
+
+    async function handleConfirmar(id) {
+      if (!confirm('¿Confirmar esta cita y enviar a sala de espera?')) return
+      hideError(errorMsg)
+      const { error } = await confirmarCita(id)
+      if (error) {
+        showError(errorMsg, error.message)
+        return
+      }
+      loadCitas()
+    }
+
+    tbody.addEventListener('click', (e) => {
+      const editBtn = e.target.closest('.btn-editar')
+      const delBtn = e.target.closest('.btn-eliminar')
+      const confBtn = e.target.closest('.btn-confirmar')
+      if (editBtn) openEditModal(editBtn.dataset.id)
+      if (delBtn) handleDelete(delBtn.dataset.id)
+      if (confBtn) handleConfirmar(confBtn.dataset.id)
+    })
+
+    document.getElementById('btn-nueva-cita').addEventListener('click', openCreateModal)
+    document.getElementById('btn-cancelar').addEventListener('click', hideModal)
+    filtroEstado.addEventListener('change', loadCitas)
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      hideError(formError)
+
+      const pacienteId = fPaciente.value
+      const especialidad = fEspecialidad.value.trim()
+      const medico = fMedico.value.trim()
+      const fecha = fFecha.value
+      const hora = fHora.value
+      const prioridad = fPrioridad.value
+      const estado = fEstado.value
+
+      if (!pacienteId || !especialidad || !medico || !fecha || !hora || !prioridad || !estado) {
+        showError(formError, 'Los campos obligatorios deben estar completos.')
+        return
+      }
+
+      if (fecha < todayStr()) {
+        showError(formError, 'La fecha de la cita no puede ser anterior a hoy.')
+        return
+      }
+
+      const citaData = {
+        codigo: fCodigo.value,
+        paciente_id: pacienteId,
+        especialidad: especialidad,
+        medico: medico,
+        fecha: fecha,
+        hora: hora,
+        motivo: fMotivo.value.trim() || null,
+        prioridad: prioridad,
+        justificacion_prioridad: fJustificacion.value.trim() || null,
+        estado: estado
+      }
+
+      let error
+      if (editId) {
+        ({ error } = await updateCita(editId, citaData))
+      } else {
+        ({ error } = await createCita(citaData))
+      }
+
+      if (error) {
+        if (error.code === '23505') {
+          showError(formError, 'Ya existe una cita para ese médico en esa fecha y hora.')
+        } else {
+          showError(formError, error.message)
+        }
+        return
+      }
+
+      hideModal()
+      loadCitas()
+    })
+
+    loadCitas()
+  </script>
+</body>
+</html>

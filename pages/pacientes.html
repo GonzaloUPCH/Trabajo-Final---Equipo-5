@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clínica - Pacientes</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/pacientes.css">
+</head>
+<body>
+  <div class="container">
+  <header class="page-header">
+    <h1>Gestión de Pacientes</h1>
+    <a href="../pages/dashboard.html" class="back-link">Volver al Dashboard</a>
+  </header>
+
+  <main class="page-main">
+    <div class="toolbar">
+      <div class="search-group">
+        <input type="text" id="search-input" placeholder="Buscar por nombre, apellido, documento o código...">
+        <button type="button" id="btn-search">Buscar</button>
+      </div>
+      <button type="button" id="btn-nuevo-paciente">Nuevo Paciente</button>
+    </div>
+
+    <div id="error-msg" class="message error hidden"></div>
+
+    <table id="tabla-pacientes" class="data-table">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre Completo</th>
+          <th>Tipo Doc.</th>
+          <th>Documento</th>
+          <th>Teléfono</th>
+          <th>Correo</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-pacientes"></tbody>
+    </table>
+
+    <div id="empty-state" class="empty-state hidden">No hay pacientes registrados.</div>
+  </main>
+  </div>
+
+  <div id="modal-paciente" class="modal hidden">
+    <div class="modal-content">
+      <h2 id="modal-titulo">Nuevo Paciente</h2>
+      <form id="form-paciente" class="form-grid">
+        <div class="form-group">
+          <label for="p-codigo">Código</label>
+          <input type="text" id="p-codigo" readonly>
+        </div>
+        <div class="form-group">
+          <label for="p-nombres">Nombres</label>
+          <input type="text" id="p-nombres" required>
+        </div>
+        <div class="form-group">
+          <label for="p-apellidos">Apellidos</label>
+          <input type="text" id="p-apellidos" required>
+        </div>
+        <div class="form-group">
+          <label for="p-tipo-documento">Tipo de Documento</label>
+          <select id="p-tipo-documento" required>
+            <option value="">Seleccionar tipo</option>
+            <option value="DNI">DNI</option>
+            <option value="Pasaporte">Pasaporte</option>
+            <option value="Carné de Extranjería">Carné de Extranjería</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="p-documento">Documento</label>
+          <input type="text" id="p-documento" required>
+        </div>
+        <div class="form-group">
+          <label for="p-fecha-nacimiento">Fecha de Nacimiento</label>
+          <input type="date" id="p-fecha-nacimiento" required>
+        </div>
+        <div class="form-group">
+          <label for="p-telefono">Teléfono</label>
+          <input type="text" id="p-telefono">
+        </div>
+        <div class="form-group full-width">
+          <label for="p-correo">Correo</label>
+          <input type="email" id="p-correo">
+        </div>
+        <div class="form-group full-width">
+          <label for="p-direccion">Dirección</label>
+          <input type="text" id="p-direccion">
+        </div>
+        <div class="form-group full-width">
+          <label for="p-alergias">Alergias</label>
+          <textarea id="p-alergias"></textarea>
+        </div>
+
+        <div class="section-title">Contacto de Emergencia</div>
+        <div class="form-group full-width">
+          <label for="p-contacto-nombre">Nombre</label>
+          <input type="text" id="p-contacto-nombre">
+        </div>
+        <div class="form-group full-width">
+          <label for="p-contacto-parentesco">Parentesco</label>
+          <input type="text" id="p-contacto-parentesco">
+        </div>
+        <div class="form-group full-width">
+          <label for="p-contacto-telefono">Teléfono</label>
+          <input type="text" id="p-contacto-telefono">
+        </div>
+
+        <div id="form-error" class="message error hidden full-width"></div>
+
+        <div class="form-actions">
+          <button type="submit" id="btn-guardar">Guardar</button>
+          <button type="button" id="btn-cancelar">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import {
+      getPacientes,
+      getPacienteById,
+      searchPacientes,
+      createPaciente,
+      updatePaciente,
+      deletePaciente,
+      generateCodigoPaciente
+    } from '../js/pacientes.js'
+
+    const userRol = sessionStorage.getItem('user_rol')
+
+    if (!userRol) {
+      window.location.href = '../index.html'
+      throw new Error('No session')
+    }
+
+    if (userRol !== 'Administrador' && userRol !== 'Recepción') {
+      window.location.href = '../pages/dashboard.html'
+      throw new Error('No permission')
+    }
+
+    const tbody = document.getElementById('tbody-pacientes')
+    const emptyState = document.getElementById('empty-state')
+    const errorMsg = document.getElementById('error-msg')
+
+    const modal = document.getElementById('modal-paciente')
+    const modalTitulo = document.getElementById('modal-titulo')
+    const form = document.getElementById('form-paciente')
+    const formError = document.getElementById('form-error')
+
+    const searchInput = document.getElementById('search-input')
+
+    const fCodigo = document.getElementById('p-codigo')
+    const fNombres = document.getElementById('p-nombres')
+    const fApellidos = document.getElementById('p-apellidos')
+    const fTipoDoc = document.getElementById('p-tipo-documento')
+    const fDocumento = document.getElementById('p-documento')
+    const fFechaNac = document.getElementById('p-fecha-nacimiento')
+    const fTelefono = document.getElementById('p-telefono')
+    const fCorreo = document.getElementById('p-correo')
+    const fDireccion = document.getElementById('p-direccion')
+    const fAlergias = document.getElementById('p-alergias')
+    const fContactoNombre = document.getElementById('p-contacto-nombre')
+    const fContactoParentesco = document.getElementById('p-contacto-parentesco')
+    const fContactoTelefono = document.getElementById('p-contacto-telefono')
+
+    let editId = null
+
+    function showError(el, text) {
+      el.textContent = text
+      el.classList.remove('hidden')
+    }
+
+    function hideError(el) {
+      el.textContent = ''
+      el.classList.add('hidden')
+    }
+
+    function showModal() {
+      modal.classList.remove('hidden')
+    }
+
+    function hideModal() {
+      modal.classList.add('hidden')
+    }
+
+    function escapeHtml(value) {
+      if (value === null || value === undefined) return ''
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+    }
+
+    function renderTable(pacientes) {
+      tbody.innerHTML = ''
+
+      if (!pacientes || pacientes.length === 0) {
+        emptyState.classList.remove('hidden')
+        return
+      }
+
+      emptyState.classList.add('hidden')
+
+      pacientes.forEach((p) => {
+        const tr = document.createElement('tr')
+        tr.innerHTML = `
+          <td>${escapeHtml(p.codigo)}</td>
+          <td>${escapeHtml(p.nombres)} ${escapeHtml(p.apellidos)}</td>
+          <td>${escapeHtml(p.tipo_documento)}</td>
+          <td>${escapeHtml(p.documento)}</td>
+          <td>${escapeHtml(p.telefono)}</td>
+          <td>${escapeHtml(p.correo)}</td>
+          <td>
+            <button type="button" class="btn-editar" data-id="${escapeHtml(p.id)}">Editar</button>
+            <button type="button" class="btn-eliminar" data-id="${escapeHtml(p.id)}">Eliminar</button>
+          </td>
+        `
+        tbody.appendChild(tr)
+      })
+    }
+
+    async function loadPacientes() {
+      hideError(errorMsg)
+      const { data, error } = await getPacientes()
+      if (error) {
+        showError(errorMsg, 'Error al cargar los pacientes.')
+        renderTable([])
+        return
+      }
+      renderTable(data)
+    }
+
+    async function openCreateModal() {
+      editId = null
+      form.reset()
+      hideError(formError)
+      modalTitulo.textContent = 'Nuevo Paciente'
+      fCodigo.value = await generateCodigoPaciente()
+      showModal()
+    }
+
+    async function openEditModal(id) {
+      hideError(formError)
+      const { data, error } = await getPacienteById(id)
+      if (error || !data) {
+        showError(errorMsg, 'No se pudo cargar el paciente.')
+        return
+      }
+      editId = id
+      modalTitulo.textContent = 'Editar Paciente'
+      fCodigo.value = data.codigo || ''
+      fNombres.value = data.nombres || ''
+      fApellidos.value = data.apellidos || ''
+      fTipoDoc.value = data.tipo_documento || ''
+      fDocumento.value = data.documento || ''
+      fFechaNac.value = data.fecha_nacimiento || ''
+      fTelefono.value = data.telefono || ''
+      fCorreo.value = data.correo || ''
+      fDireccion.value = data.direccion || ''
+      fAlergias.value = data.alergias || ''
+      fContactoNombre.value = data.contacto_emergencia_nombre || ''
+      fContactoParentesco.value = data.contacto_emergencia_parentesco || ''
+      fContactoTelefono.value = data.contacto_emergencia_telefono || ''
+      showModal()
+    }
+
+    async function handleDelete(id) {
+      if (!confirm('¿Eliminar este paciente?')) return
+      hideError(errorMsg)
+      const { error } = await deletePaciente(id)
+      if (error) {
+        showError(errorMsg, error.message)
+        return
+      }
+      loadPacientes()
+    }
+
+    async function doSearch() {
+      hideError(errorMsg)
+      const query = searchInput.value.trim()
+      if (!query) {
+        loadPacientes()
+        return
+      }
+      const { data, error } = await searchPacientes(query)
+      if (error) {
+        showError(errorMsg, 'Error al buscar pacientes.')
+        renderTable([])
+        return
+      }
+      renderTable(data)
+    }
+
+    tbody.addEventListener('click', (e) => {
+      const editBtn = e.target.closest('.btn-editar')
+      const delBtn = e.target.closest('.btn-eliminar')
+      if (editBtn) openEditModal(editBtn.dataset.id)
+      if (delBtn) handleDelete(delBtn.dataset.id)
+    })
+
+    document.getElementById('btn-nuevo-paciente').addEventListener('click', openCreateModal)
+    document.getElementById('btn-cancelar').addEventListener('click', hideModal)
+    document.getElementById('btn-search').addEventListener('click', doSearch)
+
+    searchInput.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') doSearch()
+    })
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      hideError(formError)
+
+      const nombres = fNombres.value.trim()
+      const apellidos = fApellidos.value.trim()
+      const tipoDocumento = fTipoDoc.value
+      const documento = fDocumento.value.trim()
+      const fechaNacimiento = fFechaNac.value
+
+      if (!nombres || !apellidos || !tipoDocumento || !documento || !fechaNacimiento) {
+        showError(formError, 'Los campos obligatorios deben estar completos.')
+        return
+      }
+
+      const pacienteData = {
+        codigo: fCodigo.value,
+        nombres: nombres,
+        apellidos: apellidos,
+        tipo_documento: tipoDocumento,
+        documento: documento,
+        fecha_nacimiento: fechaNacimiento,
+        telefono: fTelefono.value.trim() || null,
+        correo: fCorreo.value.trim() || null,
+        direccion: fDireccion.value.trim() || null,
+        alergias: fAlergias.value.trim() || null,
+        contacto_emergencia_nombre: fContactoNombre.value.trim() || null,
+        contacto_emergencia_parentesco: fContactoParentesco.value.trim() || null,
+        contacto_emergencia_telefono: fContactoTelefono.value.trim() || null
+      }
+
+      let error
+      if (editId) {
+        ({ error } = await updatePaciente(editId, pacienteData))
+      } else {
+        ({ error } = await createPaciente(pacienteData))
+      }
+
+      if (error) {
+        if (error.code === '23505' || (error.message && error.message.includes('duplicate'))) {
+          showError(formError, 'Ya existe un paciente con ese documento.')
+        } else {
+          showError(formError, error.message)
+        }
+        return
+      }
+
+      hideModal()
+      loadPacientes()
+    })
+
+    loadPacientes()
+  </script>
+</body>
+</html>
