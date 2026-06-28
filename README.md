@@ -100,8 +100,3 @@ python3 -m http.server 3000
 | Operaciones multi-tabla no atómicas (confirmar cita, marcar atendido) | Implementadas como funciones PostgreSQL con SECURITY DEFINER via RPC |
 | Modal visible al cargar por conflicto display:flex vs .hidden | Regla CSS `.modal.hidden { display: none !important }` |
 | Timezone UTC en todayISO() generaba fecha incorrecta en Perú | Reemplazado con fecha local usando getFullYear/getMonth/getDate |
-
-## División de responsabilidades
-| Integrante | Responsabilidad |
-|------------|-----------------|
-| (Agregar integrantes y tareas) | |
