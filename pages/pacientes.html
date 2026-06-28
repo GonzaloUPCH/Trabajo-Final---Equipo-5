@@ -8,37 +8,37 @@
   <link rel="stylesheet" href="../css/pacientes.css">
 </head>
 <body>
-  <div class="container">
+  <div class="page-wrapper">
   <header class="page-header">
     <h1>Gestión de Pacientes</h1>
-    <a href="../pages/dashboard.html" class="back-link">Volver al Dashboard</a>
+    <a href="../pages/dashboard.html" class="back-link">← Volver al Dashboard</a>
   </header>
 
   <main class="page-main">
     <div class="toolbar">
-      <div class="search-group">
-        <input type="text" id="search-input" placeholder="Buscar por nombre, apellido, documento o código...">
-        <button type="button" id="btn-search">Buscar</button>
-      </div>
+      <input type="text" id="search-input" placeholder="Buscar por nombre, apellido, documento o código...">
+      <button type="button" id="btn-search">Buscar</button>
       <button type="button" id="btn-nuevo-paciente">Nuevo Paciente</button>
     </div>
 
     <div id="error-msg" class="message error hidden"></div>
 
-    <table id="tabla-pacientes" class="data-table">
-      <thead>
-        <tr>
-          <th>Código</th>
-          <th>Nombre Completo</th>
-          <th>Tipo Doc.</th>
-          <th>Documento</th>
-          <th>Teléfono</th>
-          <th>Correo</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="tbody-pacientes"></tbody>
-    </table>
+    <div class="table-wrapper">
+      <table id="tabla-pacientes" class="data-table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Nombre Completo</th>
+            <th>Tipo Doc.</th>
+            <th>Documento</th>
+            <th>Teléfono</th>
+            <th>Correo</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-pacientes"></tbody>
+      </table>
+    </div>
 
     <div id="empty-state" class="empty-state hidden">No hay pacientes registrados.</div>
   </main>
@@ -128,6 +128,7 @@
       deletePaciente,
       generateCodigoPaciente
     } from '../js/pacientes.js'
+    import { escapeHtml, showError, hideError } from '../js/ui.js'
 
     const userRol = sessionStorage.getItem('user_rol')
 
@@ -168,32 +169,12 @@
 
     let editId = null
 
-    function showError(el, text) {
-      el.textContent = text
-      el.classList.remove('hidden')
-    }
-
-    function hideError(el) {
-      el.textContent = ''
-      el.classList.add('hidden')
-    }
-
     function showModal() {
       modal.classList.remove('hidden')
     }
 
     function hideModal() {
       modal.classList.add('hidden')
-    }
-
-    function escapeHtml(value) {
-      if (value === null || value === undefined) return ''
-      return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
     }
 
     function renderTable(pacientes) {

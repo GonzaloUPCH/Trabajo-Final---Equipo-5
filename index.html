@@ -3,64 +3,73 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clínica - Inicio de Sesión</title>
+  <title>Clínica - Acceso al sistema</title>
   <link rel="stylesheet" href="css/auth.css">
 </head>
 <body>
-  <main class="auth-container">
-    <section id="login-view" class="auth-view">
-      <h1>Iniciar Sesión</h1>
-      <form id="login-form" class="auth-form">
-        <div class="form-group">
-          <label for="login-correo">Correo electrónico</label>
-          <input type="email" id="login-correo" name="login-correo" placeholder="correo@ejemplo.com" required>
-        </div>
-        <div class="form-group">
-          <label for="login-password">Contraseña</label>
-          <input type="password" id="login-password" name="login-password" placeholder="Contraseña" required>
-        </div>
-        <div id="login-error" class="message error hidden"></div>
-        <button type="submit" id="btn-login" class="btn-primary">Ingresar</button>
-      </form>
-      <p class="auth-switch">¿No tienes una cuenta? <button type="button" id="ir-registro" class="link-button">Regístrate</button></p>
-    </section>
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <span class="auth-logo-icon">🏥</span>
+        <h1>Sistema de Gestión</h1>
+        <p>Clínica - Acceso al sistema</p>
+      </div>
 
-    <section id="register-view" class="auth-view hidden">
-      <h1>Crear Cuenta</h1>
-      <form id="register-form" class="auth-form">
-        <div class="form-group">
-          <label for="reg-nombre">Nombre completo</label>
-          <input type="text" id="reg-nombre" name="reg-nombre" placeholder="Nombre completo" required>
-        </div>
-        <div class="form-group">
-          <label for="reg-correo">Correo electrónico</label>
-          <input type="email" id="reg-correo" name="reg-correo" placeholder="correo@ejemplo.com" required>
-        </div>
-        <div class="form-group">
-          <label for="reg-password">Contraseña</label>
-          <input type="password" id="reg-password" name="reg-password" placeholder="Mínimo 6 caracteres" required>
-        </div>
-        <div class="form-group">
-          <label for="reg-confirmar">Confirmar contraseña</label>
-          <input type="password" id="reg-confirmar" name="reg-confirmar" placeholder="Repite la contraseña" required>
-        </div>
-        <div class="form-group">
-          <label for="reg-rol">Rol</label>
-          <select id="reg-rol" name="reg-rol" required>
-            <option value="">Seleccionar rol</option>
-            <option value="Administrador">Administrador</option>
-            <option value="Recepción">Recepción</option>
-            <option value="Médico">Médico</option>
-            <option value="Enfermería">Enfermería</option>
-          </select>
-        </div>
-        <div id="reg-error" class="message error hidden"></div>
-        <div id="reg-success" class="message success hidden"></div>
-        <button type="submit" id="btn-registro" class="btn-primary">Registrarse</button>
-      </form>
-      <p class="auth-switch">¿Ya tienes una cuenta? <button type="button" id="ir-login" class="link-button">Inicia sesión</button></p>
-    </section>
-  </main>
+      <div class="auth-tabs">
+        <button type="button" id="tab-login" class="auth-tab active">Iniciar Sesión</button>
+        <button type="button" id="tab-registro" class="auth-tab">Registrarse</button>
+      </div>
+
+      <section id="login-view">
+        <div id="login-error" class="auth-error hidden"></div>
+        <form id="login-form">
+          <div class="form-group">
+            <label for="login-correo">Correo electrónico</label>
+            <input type="email" id="login-correo" name="login-correo" placeholder="correo@ejemplo.com" required>
+          </div>
+          <div class="form-group">
+            <label for="login-password">Contraseña</label>
+            <input type="password" id="login-password" name="login-password" placeholder="Contraseña" required>
+          </div>
+          <button type="submit" id="btn-login" class="btn-primary">Iniciar Sesión</button>
+        </form>
+      </section>
+
+      <section id="register-view" class="hidden">
+        <div id="reg-error" class="auth-error hidden"></div>
+        <div id="reg-success" class="auth-success hidden"></div>
+        <form id="register-form">
+          <div class="form-group">
+            <label for="reg-nombre">Nombre completo</label>
+            <input type="text" id="reg-nombre" name="reg-nombre" placeholder="Nombre completo" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-correo">Correo electrónico</label>
+            <input type="email" id="reg-correo" name="reg-correo" placeholder="correo@ejemplo.com" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-password">Contraseña</label>
+            <input type="password" id="reg-password" name="reg-password" placeholder="Mínimo 6 caracteres" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-confirmar">Confirmar contraseña</label>
+            <input type="password" id="reg-confirmar" name="reg-confirmar" placeholder="Repite la contraseña" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-rol">Rol</label>
+            <select id="reg-rol" name="reg-rol" required>
+              <option value="">Seleccionar rol</option>
+              <option value="Administrador">Administrador</option>
+              <option value="Recepción">Recepción</option>
+              <option value="Médico">Médico</option>
+              <option value="Enfermería">Enfermería</option>
+            </select>
+          </div>
+          <button type="submit" id="btn-registro" class="btn-primary">Crear cuenta</button>
+        </form>
+      </section>
+    </div>
+  </div>
 
   <script type="module">
     import { registerUser, loginUser, getUserProfile, getCurrentUser } from './js/auth.js'
@@ -68,8 +77,8 @@
     const loginView = document.getElementById('login-view')
     const registerView = document.getElementById('register-view')
 
-    const irRegistro = document.getElementById('ir-registro')
-    const irLogin = document.getElementById('ir-login')
+    const tabLogin = document.getElementById('tab-login')
+    const tabRegistro = document.getElementById('tab-registro')
 
     const loginForm = document.getElementById('login-form')
     const loginCorreo = document.getElementById('login-correo')
@@ -97,15 +106,19 @@
       el.classList.add('hidden')
     }
 
-    irRegistro.addEventListener('click', () => {
-      loginView.classList.add('hidden')
-      registerView.classList.remove('hidden')
+    tabLogin.addEventListener('click', () => {
+      loginView.classList.remove('hidden')
+      registerView.classList.add('hidden')
+      tabLogin.classList.add('active')
+      tabRegistro.classList.remove('active')
       hideMessage(loginError)
     })
 
-    irLogin.addEventListener('click', () => {
-      registerView.classList.add('hidden')
-      loginView.classList.remove('hidden')
+    tabRegistro.addEventListener('click', () => {
+      registerView.classList.remove('hidden')
+      loginView.classList.add('hidden')
+      tabRegistro.classList.add('active')
+      tabLogin.classList.remove('active')
       hideMessage(regError)
       hideMessage(regSuccess)
     })
@@ -195,6 +208,8 @@
       setTimeout(() => {
         registerView.classList.add('hidden')
         loginView.classList.remove('hidden')
+        tabLogin.classList.add('active')
+        tabRegistro.classList.remove('active')
         hideMessage(regSuccess)
       }, 2000)
     })

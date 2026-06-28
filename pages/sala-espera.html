@@ -8,10 +8,10 @@
   <link rel="stylesheet" href="../css/sala-espera.css">
 </head>
 <body>
-  <div class="container">
+  <div class="page-wrapper">
     <header class="page-header">
       <h1>Sala de Espera</h1>
-      <a href="../pages/dashboard.html" class="back-link">Volver al Dashboard</a>
+      <a href="../pages/dashboard.html" class="back-link">← Volver al Dashboard</a>
     </header>
 
     <main class="page-main">
@@ -36,25 +36,26 @@
 
       <div id="error-msg" class="message error hidden"></div>
 
-      <table id="tabla-sala" class="data-table">
-        <thead>
-          <tr>
-            <th>Orden</th>
-            <th>Paciente</th>
-            <th>Médico</th>
-            <th>Especialidad</th>
-            <th>Hora Llegada</th>
-            <th>Prioridad</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="tbody-sala"></tbody>
-      </table>
+      <div class="table-wrapper">
+        <table id="tabla-sala" class="data-table">
+          <thead>
+            <tr>
+              <th>Orden</th>
+              <th>Paciente</th>
+              <th>Médico</th>
+              <th>Especialidad</th>
+              <th>Hora Llegada</th>
+              <th>Prioridad</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-sala"></tbody>
+        </table>
+      </div>
 
       <div id="empty-state" class="empty-state hidden">No hay pacientes en sala de espera.</div>
     </main>
-  </div>
 
   <script type="module">
     import {
@@ -63,6 +64,7 @@
       removeFromSalaEspera,
       getSalaEsperaStats
     } from '../js/sala-espera.js'
+    import { escapeHtml, showError, hideError, estadoBadgeSala, formatDateTime } from '../js/ui.js'
 
     const userRol = sessionStorage.getItem('user_rol')
 
@@ -86,45 +88,6 @@
     const statAtencion = document.getElementById('stat-atencion')
     const statAtendido = document.getElementById('stat-atendido')
     const statAusente = document.getElementById('stat-ausente')
-
-    function showError(text) {
-      errorMsg.textContent = text
-      errorMsg.classList.remove('hidden')
-    }
-
-    function hideError() {
-      errorMsg.textContent = ''
-      errorMsg.classList.add('hidden')
-    }
-
-    function escapeHtml(value) {
-      if (value === null || value === undefined) return ''
-      return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
-    }
-
-    function estadoBadge(estado) {
-      const map = {
-        'Esperando': 'badge-esperando',
-        'En atención': 'badge-atencion',
-        'Atendido': 'badge-atendido',
-        'Ausente': 'badge-ausente'
-      }
-      const cls = map[estado] || ''
-      return `<span class="badge ${cls}">${escapeHtml(estado)}</span>`
-    }
-
-    function formatHora(timestamp) {
-      if (!timestamp) return ''
-      const d = new Date(timestamp)
-      const hh = String(d.getHours()).padStart(2, '0')
-      const mm = String(d.getMinutes()).padStart(2, '0')
-      return `${hh}:${mm}`
-    }
 
     function ordenIndicator(orden) {
       const cls = orden === 1 ? 'orden-1' : orden === 2 ? 'orden-2' : 'orden-3'
@@ -169,9 +132,9 @@
           <td>${paciente}</td>
           <td>${escapeHtml(cita.medico)}</td>
           <td>${escapeHtml(cita.especialidad)}</td>
-          <td>${formatHora(r.hora_llegada)}</td>
+          <td>${formatDateTime(r.hora_llegada)}</td>
           <td>${escapeHtml(cita.prioridad)}</td>
-          <td>${estadoBadge(r.estado)}</td>
+          <td>${estadoBadgeSala(r.estado)}</td>
           <td>${buildAcciones(r.id)}</td>
         `
         tbody.appendChild(tr)
@@ -179,10 +142,10 @@
     }
 
     async function loadSala() {
-      hideError()
+      hideError(errorMsg)
       const { data, error } = await getSalaEspera()
       if (error) {
-        showError('Error al cargar la sala de espera.')
+        showError(errorMsg, 'Error al cargar la sala de espera.')
         renderTable([])
       } else {
         renderTable(data)
@@ -198,10 +161,10 @@
     async function handleEstado(id, estado) {
       if (estado === 'Atendido' && !confirm('¿Marcar como atendido?')) return
       if (estado === 'Ausente' && !confirm('¿Marcar como ausente?')) return
-      hideError()
+      hideError(errorMsg)
       const { error } = await updateEstadoSalaEspera(id, estado)
       if (error) {
-        showError(error.message)
+        showError(errorMsg, error.message)
         return
       }
       loadSala()
@@ -209,10 +172,10 @@
 
     async function handleRetirar(id) {
       if (!confirm('¿Retirar este registro de sala de espera?')) return
-      hideError()
+      hideError(errorMsg)
       const { error } = await removeFromSalaEspera(id)
       if (error) {
-        showError(error.message)
+        showError(errorMsg, error.message)
         return
       }
       loadSala()
@@ -233,5 +196,6 @@
 
     loadSala()
   </script>
+  </div>
 </body>
 </html>

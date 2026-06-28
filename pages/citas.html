@@ -8,10 +8,10 @@
   <link rel="stylesheet" href="../css/citas.css">
 </head>
 <body>
-  <div class="container">
+  <div class="page-wrapper">
     <header class="page-header">
       <h1>Programación de Citas</h1>
-      <a href="../pages/dashboard.html" class="back-link">Volver al Dashboard</a>
+      <a href="../pages/dashboard.html" class="back-link">← Volver al Dashboard</a>
     </header>
 
     <main class="page-main">
@@ -30,26 +30,27 @@
 
       <div id="error-msg" class="message error hidden"></div>
 
-      <table id="tabla-citas" class="data-table">
-        <thead>
-          <tr>
-            <th>Código</th>
-            <th>Paciente</th>
-            <th>Especialidad</th>
-            <th>Médico</th>
-            <th>Fecha</th>
-            <th>Hora</th>
-            <th>Prioridad</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="tbody-citas"></tbody>
-      </table>
+      <div class="table-wrapper">
+        <table id="tabla-citas" class="data-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Paciente</th>
+              <th>Especialidad</th>
+              <th>Médico</th>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Prioridad</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-citas"></tbody>
+        </table>
+      </div>
 
       <div id="empty-state" class="empty-state hidden">No hay citas registradas.</div>
     </main>
-  </div>
 
   <div id="modal-cita" class="modal hidden">
     <div class="modal-content">
@@ -130,6 +131,7 @@
       getPacientesForSelect,
       confirmarCita
     } from '../js/citas.js'
+    import { escapeHtml, showError, hideError, estadoBadgeCita, todayISO } from '../js/ui.js'
 
     const userRol = sessionStorage.getItem('user_rol')
 
@@ -166,53 +168,12 @@
 
     let editId = null
 
-    function showError(el, text) {
-      el.textContent = text
-      el.classList.remove('hidden')
-    }
-
-    function hideError(el) {
-      el.textContent = ''
-      el.classList.add('hidden')
-    }
-
     function showModal() {
       modal.classList.remove('hidden')
     }
 
     function hideModal() {
       modal.classList.add('hidden')
-    }
-
-    function todayStr() {
-      const now = new Date()
-      const yyyy = now.getFullYear()
-      const mm = String(now.getMonth() + 1).padStart(2, '0')
-      const dd = String(now.getDate()).padStart(2, '0')
-      return `${yyyy}-${mm}-${dd}`
-    }
-
-    function escapeHtml(value) {
-      if (value === null || value === undefined) return ''
-      return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
-    }
-
-    function estadoBadge(estado) {
-      const map = {
-        'Programada': 'badge-programada',
-        'Confirmada': 'badge-confirmada',
-        'En espera': 'badge-espera',
-        'En atención': 'badge-atencion',
-        'Atendida': 'badge-atendida',
-        'Cancelada': 'badge-cancelada'
-      }
-      const cls = map[estado] || ''
-      return `<span class="badge ${cls}">${escapeHtml(estado)}</span>`
     }
 
     function renderTable(citas) {
@@ -241,7 +202,7 @@
           <td>${escapeHtml(c.fecha)}</td>
           <td>${escapeHtml(c.hora)}</td>
           <td>${escapeHtml(c.prioridad)}</td>
-          <td>${estadoBadge(c.estado)}</td>
+          <td>${estadoBadgeCita(c.estado)}</td>
           <td>
             <button type="button" class="btn-editar" data-id="${escapeHtml(c.id)}">Editar</button>
             <button type="button" class="btn-eliminar" data-id="${escapeHtml(c.id)}">Eliminar</button>
@@ -286,7 +247,7 @@
       fCodigo.value = await generateCodigoCita()
       fEstado.value = 'Programada'
       fPrioridad.value = 'Normal'
-      fFecha.min = todayStr()
+      fFecha.min = todayISO()
       showModal()
     }
 
@@ -305,7 +266,7 @@
       fEspecialidad.value = data.especialidad || ''
       fMedico.value = data.medico || ''
       fFecha.value = data.fecha || ''
-      fFecha.min = todayStr()
+      fFecha.min = todayISO()
       fHora.value = data.hora || ''
       fMotivo.value = data.motivo || ''
       fPrioridad.value = data.prioridad || 'Normal'
@@ -366,7 +327,7 @@
         return
       }
 
-      if (fecha < todayStr()) {
+      if (fecha < todayISO()) {
         showError(formError, 'La fecha de la cita no puede ser anterior a hoy.')
         return
       }
@@ -406,5 +367,6 @@
 
     loadCitas()
   </script>
+  </div>
 </body>
 </html>

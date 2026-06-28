@@ -8,35 +8,56 @@
   <link rel="stylesheet" href="../css/dashboard.css">
 </head>
 <body>
-  <header class="dashboard-header">
-    <h1 class="system-name">Sistema de Gestión - Clínica</h1>
-    <div class="header-user">
-      <span class="welcome-message">Bienvenido, <strong id="user-nombre"></strong></span>
-      <button type="button" id="btn-logout" class="btn-logout">Cerrar sesión</button>
-    </div>
-  </header>
+  <div class="dashboard-wrapper">
+    <header class="dashboard-header">
+      <div class="logo">
+        <div class="logo-icon">🏥</div>
+        <h1>Sistema de Gestión - Clínica</h1>
+      </div>
+      <div class="header-right">
+        <div class="user-info">
+          <div class="user-avatar" id="user-avatar">A</div>
+          <span class="user-name" id="user-nombre"></span>
+          <span class="user-rol" id="user-rol-badge"></span>
+        </div>
+        <button type="button" id="btn-logout">Cerrar sesión</button>
+      </div>
+    </header>
 
-  <main class="dashboard-main">
-    <h2 class="dashboard-subtitle">Módulos</h2>
-    <nav class="module-grid">
-      <a href="../pages/pacientes.html" class="module-card" data-module="pacientes">
-        <span class="module-title">Pacientes</span>
-        <span class="module-desc">Gestión de pacientes</span>
-      </a>
-      <a href="../pages/citas.html" class="module-card" data-module="citas">
-        <span class="module-title">Citas</span>
-        <span class="module-desc">Programación de citas</span>
-      </a>
-      <a href="../pages/sala-espera.html" class="module-card" data-module="sala-espera">
-        <span class="module-title">Sala de Espera</span>
-        <span class="module-desc">Control de sala de espera</span>
-      </a>
-      <a href="../pages/historial.html" class="module-card" data-module="historial">
-        <span class="module-title">Historial</span>
-        <span class="module-desc">Historial de consultas</span>
-      </a>
-    </nav>
-  </main>
+    <main class="dashboard-main">
+      <div class="dashboard-welcome">
+        <h2 id="welcome-msg">Bienvenido</h2>
+        <p>Selecciona un módulo para comenzar</p>
+      </div>
+
+      <div class="modules-grid" id="modules-grid">
+        <a href="../pages/pacientes.html" class="module-card pacientes" data-module="pacientes">
+          <div class="module-icon">👥</div>
+          <h3>Pacientes</h3>
+          <p>Registro y gestión de pacientes</p>
+          <div class="module-arrow">Ir al módulo →</div>
+        </a>
+        <a href="../pages/citas.html" class="module-card citas" data-module="citas">
+          <div class="module-icon">📅</div>
+          <h3>Citas</h3>
+          <p>Programación de citas médicas</p>
+          <div class="module-arrow">Ir al módulo →</div>
+        </a>
+        <a href="../pages/sala-espera.html" class="module-card sala" data-module="sala">
+          <div class="module-icon">🪑</div>
+          <h3>Sala de Espera</h3>
+          <p>Control de sala de espera virtual</p>
+          <div class="module-arrow">Ir al módulo →</div>
+        </a>
+        <a href="../pages/historial.html" class="module-card historial" data-module="historial">
+          <div class="module-icon">📋</div>
+          <h3>Historial</h3>
+          <p>Historial clínico de consultas</p>
+          <div class="module-arrow">Ir al módulo →</div>
+        </a>
+      </div>
+    </main>
+  </div>
 
   <script type="module">
     import { logoutUser } from '../js/auth.js'
@@ -50,13 +71,17 @@
     }
 
     const permisos = {
-      'Administrador': ['pacientes', 'citas', 'sala-espera', 'historial'],
-      'Recepción': ['pacientes', 'citas', 'sala-espera'],
-      'Médico': ['sala-espera', 'historial'],
-      'Enfermería': ['sala-espera']
+      'Administrador': ['pacientes', 'citas', 'sala', 'historial'],
+      'Recepción': ['pacientes', 'citas', 'sala'],
+      'Médico': ['sala', 'historial'],
+      'Enfermería': ['sala']
     }
 
-    document.getElementById('user-nombre').textContent = userNombre || ''
+    const nombre = userNombre || ''
+    document.getElementById('user-nombre').innerText = nombre
+    document.getElementById('user-rol-badge').innerText = userRol
+    document.getElementById('user-avatar').innerText = nombre ? nombre.charAt(0).toUpperCase() : ''
+    document.getElementById('welcome-msg').innerText = 'Bienvenido, ' + nombre
 
     const modulosPermitidos = permisos[userRol] || []
     document.querySelectorAll('.module-card').forEach((card) => {

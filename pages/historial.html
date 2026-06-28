@@ -8,10 +8,10 @@
   <link rel="stylesheet" href="../css/historial.css">
 </head>
 <body>
-  <div class="container">
+  <div class="page-wrapper">
     <header class="page-header">
       <h1>Historial de Consultas</h1>
-      <a href="../pages/dashboard.html" class="back-link">Volver al Dashboard</a>
+      <a href="../pages/dashboard.html" class="back-link">← Volver al Dashboard</a>
     </header>
 
     <main class="page-main">
@@ -23,24 +23,25 @@
 
       <div id="error-msg" class="message error hidden"></div>
 
-      <table id="tabla-historial" class="data-table">
-        <thead>
-          <tr>
-            <th>Paciente</th>
-            <th>Médico</th>
-            <th>Especialidad</th>
-            <th>Fecha Atención</th>
-            <th>Diagnóstico</th>
-            <th>Próxima Cita</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="tbody-historial"></tbody>
-      </table>
+      <div class="table-wrapper">
+        <table id="tabla-historial" class="data-table">
+          <thead>
+            <tr>
+              <th>Paciente</th>
+              <th>Médico</th>
+              <th>Especialidad</th>
+              <th>Fecha Atención</th>
+              <th>Diagnóstico</th>
+              <th>Próxima Cita</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-historial"></tbody>
+        </table>
+      </div>
 
       <div id="empty-state" class="empty-state hidden">No hay registros en el historial.</div>
     </main>
-  </div>
 
   <div id="modal-historial" class="modal hidden">
     <div class="modal-content">
@@ -104,6 +105,7 @@
       updateHistorial,
       searchHistorial
     } from '../js/historial.js'
+    import { escapeHtml, formatDate, showError, hideError, truncate } from '../js/ui.js'
 
     const userRol = sessionStorage.getItem('user_rol')
 
@@ -139,44 +141,12 @@
 
     let editId = null
 
-    function showError(el, text) {
-      el.textContent = text
-      el.classList.remove('hidden')
-    }
-
-    function hideError(el) {
-      el.textContent = ''
-      el.classList.add('hidden')
-    }
-
     function showModal() {
       modal.classList.remove('hidden')
     }
 
     function hideModal() {
       modal.classList.add('hidden')
-    }
-
-    function escapeHtml(value) {
-      if (value === null || value === undefined) return ''
-      return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
-    }
-
-    function formatDate(dateStr) {
-      if (!dateStr) return '—'
-      const parts = String(dateStr).slice(0, 10).split('-')
-      if (parts.length !== 3) return '—'
-      return `${parts[2]}/${parts[1]}/${parts[0]}`
-    }
-
-    function truncate(text, max) {
-      if (!text) return ''
-      return text.length > max ? text.slice(0, max) + '...' : text
     }
 
     function renderTable(registros) {
@@ -307,5 +277,6 @@
 
     loadHistorial()
   </script>
+  </div>
 </body>
 </html>
