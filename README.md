@@ -1,7 +1,7 @@
 # Sistema de Gestión de Clínica
 
 ## Integrantes
-- (Agregar nombres del equipo)
+- José Gonzalo Saldaña Rodriguez
 
 ## Caso elegido
 Sistema de Gestión de Clínica
