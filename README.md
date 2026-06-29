@@ -64,7 +64,7 @@ python3 -m http.server 3000
 ```
 
 ### Opción 2 — URL desplegada
-(Agregar URL de despliegue aquí)
+(https://dakuectdqyrwyvvzwepl.supabase.co)
 
 ## Estructura del proyecto
 ```
