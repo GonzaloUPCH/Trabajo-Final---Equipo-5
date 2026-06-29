@@ -1,3 +1,17 @@
+:root {
+  --primary: #1a237e;
+  --primary-dark: #13176b;
+  --primary-light: #3949ab;
+  --accent: #00897b;
+  --success: #2e7d32;
+  --danger: #c62828;
+  --warning: #f57f17;
+  --bg: #f5f6fa;
+  --text: #2d2d3a;
+  --text-muted: #888;
+  --border: #e5e7f0;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -5,10 +19,11 @@
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #f0f2f5;
-  color: #333;
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+  background: #f5f6fa;
+  color: #2d2d3a;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
 .hidden {

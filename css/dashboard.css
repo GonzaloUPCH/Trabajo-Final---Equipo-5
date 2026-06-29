@@ -2,11 +2,11 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f0f2f5;
+  background: var(--bg);
 }
 
 .dashboard-header {
-  background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
   color: white;
   padding: 0 32px;
   height: 64px;
@@ -33,7 +33,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  color: white;
 }
 
 .dashboard-header h1 {
@@ -111,7 +111,7 @@
 .dashboard-welcome h2 {
   font-size: 26px;
   font-weight: 700;
-  color: #1a237e;
+  color: var(--primary);
   margin-bottom: 4px;
 }
 
@@ -133,7 +133,7 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   transition: transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
-  border: 1px solid #e8eaf6;
+  border: 1px solid var(--border);
   display: block;
 }
 
@@ -149,19 +149,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
   margin-bottom: 16px;
 }
 
-.module-card.pacientes .module-icon { background: #e3f2fd; }
-.module-card.citas .module-icon { background: #e8f5e9; }
-.module-card.sala .module-icon { background: #fff8e1; }
-.module-card.historial .module-icon { background: #fce4ec; }
+.module-card.pacientes .module-icon { background: #e3f2fd; color: #1565c0; }
+.module-card.citas .module-icon { background: #e8f5e9; color: #2e7d32; }
+.module-card.sala .module-icon { background: #fff8e1; color: #f57f17; }
+.module-card.historial .module-icon { background: #fce4ec; color: #880e4f; }
 
 .module-card h3 {
   font-size: 17px;
   font-weight: 600;
-  color: #1a237e;
+  color: var(--primary);
   margin-bottom: 6px;
 }
 
@@ -174,6 +173,12 @@
 .module-arrow {
   margin-top: 16px;
   font-size: 13px;
-  color: #3949ab;
+  color: var(--primary-light);
   font-weight: 500;
+}
+
+@media (max-width: 600px) {
+  .dashboard-header { padding: 0 16px; }
+  .user-name { display: none; }
+  .dashboard-main { padding: 24px 16px; }
 }

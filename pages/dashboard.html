@@ -4,16 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Clínica - Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/global.css">
   <link rel="stylesheet" href="../css/dashboard.css">
 </head>
 <body>
   <div class="dashboard-wrapper">
     <header class="dashboard-header">
-      <div class="logo">
-        <div class="logo-icon">🏥</div>
-        <h1>Sistema de Gestión - Clínica</h1>
-      </div>
+     <div class="logo">
+  <div class="logo-icon">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/><rect x="3" y="3" width="18" height="18" rx="3"/></svg>
+  </div>
+  <h1>Sistema de Gestión - Clínica</h1>
+</div>
       <div class="header-right">
         <div class="user-info">
           <div class="user-avatar" id="user-avatar">A</div>
@@ -31,30 +36,38 @@
       </div>
 
       <div class="modules-grid" id="modules-grid">
-        <a href="../pages/pacientes.html" class="module-card pacientes" data-module="pacientes">
-          <div class="module-icon">👥</div>
-          <h3>Pacientes</h3>
-          <p>Registro y gestión de pacientes</p>
-          <div class="module-arrow">Ir al módulo →</div>
-        </a>
-        <a href="../pages/citas.html" class="module-card citas" data-module="citas">
-          <div class="module-icon">📅</div>
-          <h3>Citas</h3>
-          <p>Programación de citas médicas</p>
-          <div class="module-arrow">Ir al módulo →</div>
-        </a>
+       <a href="../pages/pacientes.html" class="module-card pacientes" data-module="pacientes">
+  <div class="module-icon">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="7" r="3"/><path d="M3 21v-1a6 6 0 0 1 6-6h0a6 6 0 0 1 6 6v1"/><circle cx="17" cy="9" r="2.5"/><path d="M21 21v-1a4.5 4.5 0 0 0-3-4.2"/></svg>
+  </div>
+  <h3>Pacientes</h3>
+  <p>Registro y gestión de pacientes</p>
+  <div class="module-arrow">Ir al módulo →</div>
+</a>
+       <a href="../pages/citas.html" class="module-card citas" data-module="citas">
+  <div class="module-icon">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+  </div>
+  <h3>Citas</h3>
+  <p>Programación de citas médicas</p>
+  <div class="module-arrow">Ir al módulo →</div>
+</a>
         <a href="../pages/sala-espera.html" class="module-card sala" data-module="sala">
-          <div class="module-icon">🪑</div>
-          <h3>Sala de Espera</h3>
-          <p>Control de sala de espera virtual</p>
-          <div class="module-arrow">Ir al módulo →</div>
-        </a>
+  <div class="module-icon">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+  </div>
+  <h3>Sala de Espera</h3>
+  <p>Control de sala de espera virtual</p>
+  <div class="module-arrow">Ir al módulo →</div>
+</a>
         <a href="../pages/historial.html" class="module-card historial" data-module="historial">
-          <div class="module-icon">📋</div>
-          <h3>Historial</h3>
-          <p>Historial clínico de consultas</p>
-          <div class="module-arrow">Ir al módulo →</div>
-        </a>
+  <div class="module-icon">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+  </div>
+  <h3>Historial</h3>
+  <p>Historial clínico de consultas</p>
+  <div class="module-arrow">Ir al módulo →</div>
+</a>
       </div>
     </main>
   </div>

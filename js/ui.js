@@ -68,3 +68,14 @@ export function todayISO() {
   const day = String(d.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
 }
+
+export function setLoading(btn, isLoading, loadingText = 'Guardando...') {
+  if (isLoading) {
+    btn.dataset.originalText = btn.textContent
+    btn.textContent = loadingText
+    btn.disabled = true
+  } else {
+    btn.textContent = btn.dataset.originalText || btn.textContent
+    btn.disabled = false
+  }
+}
