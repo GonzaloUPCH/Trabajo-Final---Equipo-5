@@ -2,8 +2,8 @@
 
 ## Integrantes
 - Jose Gonzalo Saldaña Rodriguez
-
-- Kaira Johany Portocarrero Hoyos 
+- Kaira Johany Portocarrero Hoyos
+- Reynaldo Ulises Jimenez Gamboa 
 
 ## Caso elegido
 Sistema de Gestión de Clínica
