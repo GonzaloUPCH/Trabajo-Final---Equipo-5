@@ -4,7 +4,7 @@
 - Jose Gonzalo Saldaña Rodriguez
 - Kaira Johany Portocarrero Hoyos
 - Reynaldo Ulises Jimenez Gamboa 
-
+- Jeremy  Mendez Ponce de Leon
 ## Caso elegido
 Sistema de Gestión de Clínica
 
