@@ -111,6 +111,7 @@ python3 -m http.server 3000
 |------------|-----------------|
 | Jose Gonzalo Saldaña Rodriguez | Líder del equipo |
 | Reynaldo Ulises Jimenez Gamboa | Coordinador |
+| Jeremy Mendez Ponce de Leon | Miembro |
 <img width="1600" height="757" alt="sistemasfinal1" src="https://github.com/user-attachments/assets/72e24faf-f07d-44f1-911e-b11bc8e5f941" />
 <img width="1600" height="757" alt="sistemasfinal2" src="https://github.com/user-attachments/assets/b8d0de51-85b1-41fe-9dbb-6a7a9b32f5d9" />
 <img width="1251" height="852" alt="sistemasfinal5" src="https://github.com/user-attachments/assets/6d5ce521-4626-4bf5-8217-8a94445d124c" />
