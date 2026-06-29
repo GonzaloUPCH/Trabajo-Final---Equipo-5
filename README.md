@@ -66,6 +66,8 @@ python3 -m http.server 3000
 ### Opción 2 — URL desplegada
 (https://dakuectdqyrwyvvzwepl.supabase.co)
 
+## Capturas del sistema
+
 ## Estructura del proyecto
 ```
 ├── index.html              # Login y registro
