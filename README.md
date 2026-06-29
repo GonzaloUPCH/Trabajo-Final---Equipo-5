@@ -1,7 +1,7 @@
 # Sistema de Gestión de Clínica
 
 ## Integrantes
-- José Gonzalo Saldaña Rodriguez
+- Jose Gonzalo Saldaña Rodriguez
 
 - Kaira Johany Portocarrero Hoyos 
 
@@ -104,6 +104,7 @@ python3 -m http.server 3000
 | Timezone UTC en todayISO() generaba fecha incorrecta en Perú | Reemplazado con fecha local usando getFullYear/getMonth/getDate |
 
 ## División de responsabilidades
+
 | Integrante | Responsabilidad |
 |------------|-----------------|
-| (Agregar integrantes y tareas) | |
+| Jose Gonzalo Saldaña Rodriguez | Líder del equipo |
