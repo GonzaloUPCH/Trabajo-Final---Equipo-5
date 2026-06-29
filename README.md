@@ -108,3 +108,4 @@ python3 -m http.server 3000
 | Integrante | Responsabilidad |
 |------------|-----------------|
 | Jose Gonzalo Saldaña Rodriguez | Líder del equipo |
+| Reynaldo Ulises Jimenez Gamboa | Coordinador |
