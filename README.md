@@ -117,3 +117,4 @@ python3 -m http.server 3000
 | Jose Gonzalo Saldaña Rodriguez | Líder del equipo |
 | Reynaldo Ulises Jimenez Gamboa | Coordinador |
 | Jeremy Mendez Ponce de Leon | Miembro |
+| Kaira Johany Portocarrero Hoyos | Miembro |
